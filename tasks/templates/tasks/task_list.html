@@ -1,0 +1,382 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block header %}Задачи{% endblock %}
+
+{% block content %}
+<style>
+    .custom-form-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        margin-bottom: 2rem;
+    }
+    .custom-form-container h5 {
+        color: var(--primary-light);
+        margin-bottom: 1.5rem;
+    }
+    .form-row-gap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 1.5rem; /* горизонтальный отступ */
+        row-gap: 30px; /* вертикальный отступ 30px */
+    }
+    .form-field {
+        flex: 1 1 300px; /* адаптивная ширина */
+        min-width: 250px;
+    }
+    .form-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+        font-weight: 500;
+    }
+    .form-field input, .form-field textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+    }
+    .form-field select {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: black; /* ✅ Чёрный текст в выпадающем списке */
+    }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+
+    .custom-table-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    .custom-table-container table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0; /* убираем отступы между ячейками по умолчанию */
+    }
+    .custom-table-container th {
+        background-color: var(--sidebar-bg);
+        padding: 1rem 39px; /* 39px горизонтальный отступ */
+        text-align: center; /* ✅ Заголовки по центру */
+        color: var(--primary-light);
+        font-weight: 600;
+    }
+    .custom-table-container td {
+        padding: 1rem 39px; /* 39px горизонтальный отступ */
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: middle; /* ✅ Выравнивание по центру ячейки */
+        text-align: center; /* ✅ Центрируем содержимое столбца */
+    }
+    .custom-table-container tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    .custom-table-container tbody tr:hover {
+        background-color: rgba(26, 115, 232, 0.1);
+    }
+
+    .priority-indicator {
+        display: inline-block;
+        width: 24px; /* ✅ В 2 раза больше */
+        height: 24px; /* ✅ В 2 раза больше */
+        border-radius: 50%;
+        cursor: pointer; /* ✅ Курсор-показатель кликабельности */
+    }
+    .priority-form {
+        display: inline-block;
+    }
+    .priority-form select {
+        width: auto;
+        padding: 0.25rem;
+        font-size: 0.8rem;
+        border: none;
+        background: transparent;
+        outline: none;
+    }
+
+    .status-form {
+        display: inline-block;
+    }
+    .status-form select {
+        padding: 0.25rem;
+        font-size: 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+    }
+
+    .delete-btn {
+        padding: 0.25rem 0.5rem;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    .delete-btn:hover {
+        background: #c82333;
+    }
+
+    .description-cell {
+        text-align: left; /* ✅ Описание выравниваем по левому краю */
+        padding-top: 0; /* ✅ Убираем верхний отступ */
+    }
+    .description-form {
+        display: inline-block;
+        width: 100%;
+    }
+    .description-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        resize: vertical;
+    }
+    .description-form button {
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .description-text {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        white-space: pre-wrap; /* ✅ Сохраняем переносы строк */
+    }
+
+    .cancellation-form {
+        margin-top: 0.5rem;
+    }
+    .cancellation-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        resize: vertical;
+        margin-bottom: 0.5rem;
+    }
+    .cancellation-form button {
+        padding: 0.5rem 1rem;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .due-date {
+        font-weight: 600;
+    }
+    .due-date-overdue {
+        color: #dc3545; /* 🔴 Красный */
+    }
+    .due-date-normal {
+        color: #28a745; /* 🟢 Зелёный */
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Форма создания задачи -->
+    {% if form %}
+    <div class="custom-form-container">
+        <h5>Создать задачу</h5>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row-gap">
+                <div class="form-field">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                </div>
+                <div class="form-field">
+                    {{ form.assigned_to.label_tag }}
+                    {{ form.assigned_to }}
+                </div>
+                <div class="form-field">
+                    {{ form.priority.label_tag }}
+                    {{ form.priority }}
+                </div>
+                <div class="form-field">
+                    {{ form.due_date.label_tag }}
+                    {{ form.due_date }}
+                </div>
+                <div class="form-field">
+                    {{ form.description.label_tag }}
+                    {{ form.description }}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Создать задачу</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Таблица задач -->
+    <div class="custom-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Задача</th>
+                    <th>Исполнитель</th>
+                    <th>Постановщик</th>
+                    <th>Срок</th>
+                    <th>Статус</th>
+                    <th>Приоритет</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in all_tasks %}
+                {% with task=item.task is_created_by_ceo=item.is_created_by_ceo %}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</td>
+                    <td>{{ task.created_by.get_full_name|default:task.created_by.username }}</td>
+                    <td>
+                        {% if task.due_date %}
+                            {% if task.due_date < today %}
+                                <!-- 🔴 Просрочено -->
+                                <span class="due-date due-date-overdue">{{ task.due_date|date:"d.m.Y" }}</span>
+                            {% else %}
+                                <!-- 🟢 Нормальный срок -->
+                                <span class="due-date due-date-normal">{{ task.due_date|date:"d.m.Y" }}</span>
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.status == 'cancelled' %}
+                            <!-- Если задача отменена — показываем статус и причину -->
+                            <span style="color: #dc3545; font-weight: 600;">{{ task.get_status_display }}</span>
+                            {% if task.cancellation_reason and user_group in 'Lead Managers,CEO' %}
+                                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #dc3545; font-style: italic;">
+                                    Причина: {{ task.cancellation_reason }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <!-- Форма изменения статуса -->
+                            <form method="post" action="{% url 'tasks:update_status' task.id %}" class="status-form">
+                                {% csrf_token %}
+                                <select name="status" onchange="this.form.submit();"
+                                        style="background-color:
+                                            {% if task.status == 'todo' %}var(--secondary);
+                                            {% elif task.status == 'in_progress' %}var(--warning);
+                                            {% elif task.status == 'done' %}var(--success);
+                                            {% elif task.status == 'cancelled' %}var(--danger);
+                                            {% else %}var(--secondary);{% endif %};
+                                            color: white;">
+                                    <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>К выполнению</option>
+                                    <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>В работе</option>
+                                    <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
+                                    <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
+                                </select>
+                            </form>
+                            <!-- ✅ Форма отмены с причиной -->
+                            {% if task.status != 'cancelled' %}
+                                <form method="post" action="{% url 'tasks:update_status' task.id %}" class="cancellation-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <textarea name="cancellation_reason" placeholder="Укажите причину отмены..." rows="2"></textarea>
+                                    <button type="submit">Отменить</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user_group == 'Lead Managers' or user_group == 'CEO' %}
+                            {% if user_group == 'Lead Managers' and is_created_by_ceo %}
+                                <!-- Лид не может менять приоритет задачи CEO -->
+                                <span class="priority-indicator" style="background-color:
+                                    {% if task.priority == 'urgent' %}#dc3545;
+                                    {% elif task.priority == 'high' %}#fd7e14;
+                                    {% elif task.priority == 'medium' %}#ffc107;
+                                    {% elif task.priority == 'low' %}#28a745;
+                                    {% else %}#6c757d;{% endif %}"></span>
+                            {% else %}
+                                <!-- Форма для изменения приоритета -->
+                                <form method="post" action="{% url 'tasks:update_priority' task.id %}" class="priority-form">
+                                    {% csrf_token %}
+                                    <select name="priority" onchange="this.form.submit();"
+                                            style="background-color:
+                                                {% if task.priority == 'urgent' %}#dc3545;
+                                                {% elif task.priority == 'high' %}#fd7e14;
+                                                {% elif task.priority == 'medium' %}#ffc107;
+                                                {% elif task.priority == 'low' %}#28a745;
+                                                {% else %}#6c757d;{% endif %};
+                                                color: white; border: none; border-radius: 50%; width: 24px; height: 24px;">
+                                        <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Низкий</option>
+                                        <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Средний</option>
+                                        <option value="high" {% if task.priority == 'high' %}selected{% endif %}>Высокий</option>
+                                        <option value="urgent" {% if task.priority == 'urgent' %}selected{% endif %}>Срочно</option>
+                                    </select>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <!-- Обычный кружок для обычных пользователей -->
+                            <span class="priority-indicator" style="background-color:
+                                {% if task.priority == 'urgent' %}#dc3545;
+                                {% elif task.priority == 'high' %}#fd7e14;
+                                {% elif task.priority == 'medium' %}#ffc107;
+                                {% elif task.priority == 'low' %}#28a745;
+                                {% else %}#6c757d;{% endif %}"></span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <!-- ✅ Новая строка для описания -->
+                <tr>
+                    <td colspan="6" class="description-cell">
+                        {% if user_group == 'Lead Managers' or user_group == 'CEO' %}
+                            <!-- Форма редактирования описания -->
+                            <form method="post" action="{% url 'tasks:update_description' task.id %}" class="description-form">
+                                {% csrf_token %}
+                                <textarea name="description" rows="3">{{ task.description }}</textarea>
+                                <button type="submit">Сохранить</button>
+                            </form>
+                        {% else %}
+                            <!-- Обычный текст описания -->
+                            <div class="description-text">{{ task.description|default:"—" }}</div>
+                        {% endif %}
+
+                        <!-- ✅ Кнопка удаления -->
+                        {% if task.status == 'cancelled' %}
+                            {% if user_group == 'Lead Managers' or user_group == 'CEO' %}
+                                {% if user_group == 'Lead Managers' and is_created_by_ceo %}
+                                    <!-- Лид не может удалить задачу CEO -->
+                                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                                        (Нельзя удалить: создана CEO)
+                                    </div>
+                                {% else %}
+                                    <form method="post" action="{% url 'tasks:delete_task' task.id %}" style="display: inline-block; margin-top: 0.5rem;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="delete-btn" onclick="return confirm('Удалить задачу?')">Удалить</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
