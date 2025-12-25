@@ -1,0 +1,118 @@
+<!-- templates/accounts/warehouse_manager.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Склад — Кладовщик{% endblock %}
+{% block header %}Склад — Управление товарами{% endblock %}
+{% block content %}
+<div class="card">
+    <!-- Добавление товара -->
+    <form method="post" action="{% url 'add_product' %}" style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+        {% csrf_token %}
+        <h3 style="color: var(--primary-light); margin-bottom: 1rem;">Добавить товар</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <input type="text" name="name" placeholder="Название товара" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+            <input type="number" name="price" placeholder="Цена (₽)" step="0.01" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+            <input type="number" name="quantity" placeholder="Количество" min="0" style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+            <input type="text" name="description" placeholder="Описание (опционально)" style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить товар</button>
+    </form>
+
+    <!-- Список товаров -->
+    <h3 style="color: var(--primary-light); margin: 2rem 0 1rem;">Товары на складе</h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Описание</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Цена</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кол-во</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem; color: var(--text); font-weight: 500;">{{ product.name }}</td>
+                        <td style="padding: 1rem; color: var(--text);">{{ product.description|default:"—" }}</td>
+                        <td style="padding: 1rem; color: #1a73e8; font-weight: 500;">{{ product.price }} ₽</td>
+                        <td style="padding: 1rem; color: var(--text);">
+                            {% if product.quantity > 0 %}
+                                <span style="color: #28a745;">{{ product.quantity }} шт.</span>
+                            {% else %}
+                                <span style="color: #dc3545;">0 шт.</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <form method="post" action="{% url 'edit_product' product.id %}" style="display: grid; gap: 0.5rem;">
+                                {% csrf_token %}
+                                <input type="text" name="name" value="{{ product.name }}" required style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                <input type="number" name="price" value="{{ product.price }}" step="0.01" required style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                <input type="number" name="quantity" value="{{ product.quantity }}" min="0" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                <input type="text" name="description" value="{{ product.description }}" placeholder="Описание" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                <button type="submit" class="btn btn-primary" style="font-size: 0.9rem;">Сохранить</button>
+                            </form>
+                            <form method="post" action="{% url 'delete_product' product.id %}" style="margin-top: 0.5rem;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline" style="background-color: #dc3545; color: white; font-size: 0.9rem;" onclick="return confirm('Удалить товар?')">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                            Товары отсутствуют
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Журнал движений -->
+    <h3 style="color: var(--primary-light); margin: 3rem 0 1rem;">Журнал движений</h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Дата</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Тип</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кол-во</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кто</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Описание</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem; color: var(--text);">{{ log.created_at|date:"d M, H:i" }}</td>
+                        <td style="padding: 1rem; color: var(--text);">{{ log.product.name }}</td>
+                        <td style="padding: 1rem;">
+                            <span style="
+                                padding: 0.4rem 0.8rem;
+                                border-radius: 6px;
+                                font-size: 0.9rem;
+                                font-weight: 500;
+                                {% if log.movement_type == 'incoming' %}background: rgba(40, 167, 69, 0.2); color: #28a745;
+                                {% elif log.movement_type == 'outgoing' %}background: rgba(220, 53, 69, 0.2); color: #dc3545;
+                                {% else %}background: rgba(255, 193, 7, 0.2); color: #f39c12;
+                                {% endif %}
+                            ">{{ log.get_movement_type_display }}</span>
+                        </td>
+                        <td style="padding: 1rem; color: var(--text);">{{ log.quantity }}</td>
+                        <td style="padding: 1rem; color: var(--text);">{{ log.user.username }}</td>
+                        <td style="padding: 1rem; color: var(--text);">{{ log.description|default:"—" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                            Журнал пуст
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+<!-- templates/accounts/lead_manager_page.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Все заявки{% endblock %}
+{% block header %}Все заявки{% endblock %}
+{% block content %}
+<div class="card">
+    <!-- Форма фильтров -->
+    <form method="get" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; align-items: end;">
+        <!-- Поиск по товару -->
+        <div>
+            <label>Товар</label>
+            <input type="text" name="search" value="{{ search }}" placeholder="Поиск..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+
+        <!-- Поиск по клиенту -->
+        <div>
+            <label>Клиент</label>
+            <input type="text" name="client" value="{{ client }}" placeholder="Имя клиента" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+
+        <!-- Фильтр по статусу -->
+        <div>
+            <label>Статус</label>
+            <select name="status" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+                <option value="">Все статусы</option>
+                {% for value, label in STATUS_CHOICES %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Фильтр по дате -->
+        <div style="display: flex; gap: 0.5rem;">
+            <div style="flex: 1;">
+                <label>От</label>
+                <input type="date" name="date_from" value="{{ date_from }}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+            </div>
+            <div style="flex: 1;">
+                <label>До</label>
+                <input type="date" name="date_to" value="{{ date_to }}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+            </div>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; height: fit-content;">Применить</button>
+        </div>
+    </form>
+
+    <!-- Сортировка -->
+    <div style="margin-bottom: 1.5rem;">
+        <label>Сортировка:</label>
+        <div style="margin-top: 0.5rem;">
+            <a href="?{{ filters }}&sort=date_asc" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem;">По дате ↑</a>
+            <a href="?{{ filters }}&sort=date_desc" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem;">По дате ↓</a>
+        </div>
+    </div>
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Менеджер</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Статус</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Дата</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {{ req.assigned_manager.username|default:"—" }}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem;">
+                                <span style="
+                                    padding: 0.4rem 0.8rem;
+                                    border-radius: 6px;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    {% if req.status == 'completed' %}
+                                        background: rgba(40, 167, 69, 0.2);
+                                        color: #28a745;
+                                    {% elif req.status == 'cancelled' %}
+                                        background: rgba(220, 53, 69, 0.2);
+                                        color: #dc3545;
+                                    {% else %}
+                                        background: rgba(26, 115, 232, 0.2);
+                                        color: #1a73e8;
+                                    {% endif %}
+                                ">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                                {{ req.created_at|date:"d M Y, H:i" }}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <!-- Форма назначения/открепления -->
+                                <form method="post" action="{% url 'assign_request_to_manager' req.id %}" style="display: flex; gap: 0.5rem; align-items: center;">
+                                    {% csrf_token %}
+                                    <select name="manager_id" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                        <option value="">Выберите действие</option>
+                                        <option value="none">Снять с менеджера</option>
+                                        {% for manager in managers %}
+                                            <option value="{{ manager.id }}"
+                                                    {% if req.assigned_manager == manager %}selected{% endif %}>
+                                                {{ manager.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-primary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                                        Применить
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

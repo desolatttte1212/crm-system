@@ -1,0 +1,67 @@
+<!-- templates/accounts/home.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Главная{% endblock %}
+{% block header %}Добро пожаловать, {{ request.user.username }}!{% endblock %}
+{% block content %}
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Ваша активность</h3>
+
+    <!-- Карточки статистики -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem;">
+        <!-- Активные заявки -->
+        <a href="{% url 'my_requests' %}" class="btn btn-primary" style="text-align: center; padding: 1.5rem; background: rgba(26, 115, 232, 0.2); border: 1px solid var(--border); border-radius: 8px; color: white; text-decoration: none;">
+            <div style="font-size: 1.8rem; font-weight: 600;">{{ stats.total_active }}</div>
+            <div style="font-size: 0.95rem; opacity: 0.9;">Активные заявки</div>
+        </a>
+
+        <!-- Завершённые -->
+        <a href="{% url 'my_requests' %}" class="btn btn-primary" style="text-align: center; padding: 1.5rem; background: rgba(40, 167, 69, 0.2); border: 1px solid var(--border); border-radius: 8px; color: white; text-decoration: none;">
+            <div style="font-size: 1.8rem; font-weight: 600;">{{ stats.total_completed }}</div>
+            <div style="font-size: 0.95rem; opacity: 0.9;">Завершённые</div>
+        </a>
+
+        <!-- Отменённые -->
+        <a href="{% url 'my_requests' %}" class="btn btn-primary" style="text-align: center; padding: 1.5rem; background: rgba(220, 53, 69, 0.2); border: 1px solid var(--border); border-radius: 8px; color: white; text-decoration: none;">
+            <div style="font-size: 1.8rem; font-weight: 600;">{{ stats.total_cancelled }}</div>
+            <div style="font-size: 0.95rem; opacity: 0.9;">Отменённые</div>
+        </a>
+    </div>
+
+    <!-- Финансовая статистика -->
+    <div style="margin-top: 3rem; padding: 1.5rem; background: rgba(40, 167, 69, 0.1); border: 1px solid var(--border); border-radius: 12px;">
+        <h4 style="color: var(--primary-light); margin-bottom: 1rem;">Финансы</h4>
+        {% if stats.total_completed %}
+            <p style="font-size: 1.1rem; color: #1a73e8; font-weight: 500;">
+                <i class="fas fa-coins"></i> Общая сумма выполненных заказов: <strong>{{ stats.total_cost }} ₽</strong>
+            </p>
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                <i class="fas fa-coins"></i> Пока нет завершённых заказов
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Последняя заявка -->
+    <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.95rem;">
+        {% if stats.last_request %}
+            <p><strong>Последняя заявка:</strong> {{ stats.last_request.product_name }} — <strong>{{ stats.last_request.get_status_display }}</strong></p>
+            <p><strong>Дата:</strong> {{ stats.last_request.created_at|date:"d M Y, H:i" }}</p>
+        {% else %}
+            <p>У вас пока нет заявок.</p>
+        {% endif %}
+    </div>
+
+    <!-- Кнопки действий -->
+    <div style="margin-top: 3rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'create_request' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Создать заявку
+        </a>
+        <a href="{% url 'my_requests' %}" class="btn btn-outline">
+            Мои заявки
+        </a>
+        <a href="{% url 'warehouse' %}" class="btn btn-outline" style="color: #a0d8ff !important; border-color: #a0d8ff !important;">
+            <i class="fas fa-warehouse"></i> Склад
+        </a>
+    </div>
+</div>
+{% endblock %}

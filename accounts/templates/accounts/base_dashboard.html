@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}CRM System{% endblock %}</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-light: #4dabf7;
+            --bg: #0a192f;
+            --card-bg: #112240;
+            --text: #f8f9fa;
+            --text-muted: #ced4da;
+            --border: #1e3a66;
+            --sidebar-bg: #081627;
+            --sidebar-text: #a0b0d0;
+            --sidebar-active: #1a73e8;
+            --sidebar-width: 240px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Стиль для ссылок на документы */
+        .doc-link {
+            color: #a0d8ff !important;         /* Светло-голубой — хорошо виден */
+            text-decoration: none !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            padding: 0.6rem 1rem;
+            background: rgba(26, 115, 232, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+
+        .doc-link:hover {
+            background: rgba(26, 115, 232, 0.2);
+            color: #ffffff !important;
+            transform: translateY(-1px);
+        }
+
+        .doc-link i {
+            color: #4dabf7;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000; /* ✅ Добавлено */
+    box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+
+        }
+
+        .sidebar-logo {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(26, 115, 232, 0.3);
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-nav i {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+            color: var(--primary-light);
+        }
+
+        /* Уведомления в сайдбаре */
+        .sidebar-notifications {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding: 1rem 0 0;
+            position: relative;
+        }
+
+        .notifications-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.3s ease;
+        }
+
+        .notifications-toggle:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .bell-icon {
+            font-size: 1.2rem;
+            color: var(--primary-light);
+            margin-right: 10px;
+        }
+
+        .badge {
+            background: #e74c3c;
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Выпадающий список уведомлений */
+        .notifications-dropdown {
+            position: absolute;
+            bottom: 100%;
+            left: 30px;
+            width: 300px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: none;
+            z-index: 2000;
+            margin-bottom: 5px;
+        }
+
+        .dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+            color: var(--primary-light);
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            color: var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .notification-item.unread {
+            background: rgba(26, 115, 232, 0.1);
+            font-weight: 500;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover {
+            color: #e74c3c;
+        }
+
+        /* Основной контент */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+        }
+
+        /* Шапка */
+        .header {
+            background: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .greeting {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 0 10px rgba(26, 115, 232, 0.5);
+        }
+
+        /* Контент */
+        .content {
+            padding: 2rem;
+        }
+
+        /* Карточки */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-label {
+            width: 180px;
+            font-weight: 500;
+            color: var(--primary-light);
+        }
+
+        .info-value {
+            flex: 1;
+            color: var(--text);
+        }
+
+        /* Кнопки */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            margin: 0 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #155aaf;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary-light);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<!-- Сайдбар -->
+<div class="sidebar">
+    <div class="sidebar-logo">Company</div>
+        <nav class="sidebar-nav">
+        {% if request.user.groups.all.0.name == 'Clients' %}
+            <a href="{% url 'home' %}" class="active">
+                <i class="fas fa-home"></i> Главная
+            </a>
+            <a href="{% url 'profile' %}">
+                <i class="fas fa-user"></i> Личный кабинет
+            </a>
+            <a href="{% url 'my_requests' %}">
+                <i class="fas fa-list"></i> Мои заявки
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Managers' %}
+            <a href="{% url 'manager_requests' %}" class="active">
+                <i class="fas fa-tasks"></i> Заявки
+            </a>
+            <a href="{% url 'manager_clients' %}">
+                <i class="fas fa-users"></i> Клиенты
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+            <a href="{% url 'manager_archive' %}">
+                <i class="fas fa-archive"></i> Архив
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Lead Managers' %}
+            <a href="{% url 'lead_manager_page' %}" class="active">
+                <i class="fas fa-tasks"></i> Заявки
+            </a>
+            <a href="{% url 'lead_manager_clients' %}">
+                <i class="fas fa-users"></i> Клиенты
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Accountant' %}
+            <a href="{% url 'accountant_dashboard' %}" class="active">
+                <i class="fas fa-file-invoice"></i> Счета
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Warehouse Manager' %}
+            <a href="{% url 'warehouse_manager' %}" class="active">
+                <i class="fas fa-warehouse"></i> Склад
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'CTO Department' %}
+            <a href="{% url 'cto_department' %}" class="active">
+                <i class="fas fa-cogs"></i> Технические заявки
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Production' %}
+            <a href="{% url 'production_dashboard' %}" class="active">
+                <i class="fas fa-industry"></i> Производство
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'Economist' %}
+            <a href="{% url 'economist_dashboard' %}" class="active">
+                <i class="fas fa-calculator"></i> Расчёт стоимости
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'CEO' %}
+            <a href="{% url 'ceo_dashboard' %}" class="active">
+                <i class="fas fa-signature"></i> Договоры
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% elif request.user.groups.all.0.name == 'System Admin' %}
+            <a href="{% url 'system_admin_panel' %}" class="active">
+                <i class="fas fa-user-shield"></i> Управление ролями
+            </a>
+            <a href="{% url 'tasks:list' %}">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+
+        {% else %}
+            <!-- fallback для неизвестных ролей (но не клиентов) -->
+            <a href="{% url 'home' %}" class="active">
+                <i class="fas fa-home"></i> Главная
+            </a>
+            <a href="{% url 'profile' %}">
+                <i class="fas fa-user"></i> Личный кабинет
+            </a>
+            <a href="{% url 'my_requests' %}">
+                <i class="fas fa-list"></i> Мои заявки
+            </a>
+        {% endif %}
+
+        <a href="{% url 'logout' %}">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+        </a>
+    </nav>
+
+    <!-- Уведомления — внутри сайдбара -->
+    <div class="sidebar-notifications">
+        <div class="notifications-toggle" id="notifications-toggle">
+            <i class="fas fa-bell bell-icon"></i>
+            Уведомления
+            {% if unread_notifications %}
+                <span class="badge">{{ unread_notifications }}</span>
+            {% endif %}
+        </div>
+        <div class="notifications-dropdown" id="notifications-dropdown">
+            <div class="dropdown-header">Уведомления</div>
+            {% if notifications %}
+                {% for note in notifications %}
+                    <div class="notification-item {% if not note.is_read %}unread{% endif %}" id="notification-{{ note.id }}">
+                        <div>
+                            {{ note.message }}
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                {{ note.created_at|date:"H:i, d M" }}
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteNotification({{ note.id }})" title="Удалить">×</button>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="notification-item" style="color: var(--text-muted); text-align: center;">
+                    Нет уведомлений
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div> <!-- Единственный закрывающий </div> для .sidebar -->
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="greeting">{% block header %}{% endblock %}</div>
+            <div class="profile">
+                <div class="profile-avatar">
+                    {{ request.user.username|first|upper }}
+                </div>
+                <span>{{ request.user.username }}</span>
+            </div>
+        </div>
+
+        <!-- Контент -->
+        <div class="content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const toggle = document.getElementById('notifications-toggle');
+        const dropdown = document.getElementById('notifications-dropdown');
+        let hasUnread = {% if unread_notifications %}true{% else %}false{% endif %};
+
+        // Открытие/закрытие выпадающего списка
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = dropdown.style.display === 'none';
+
+            if (isHidden) {
+                dropdown.style.display = 'block';
+
+                // Если есть непрочитанные — помечаем как прочитанные
+                if (hasUnread) {
+                    fetch('{% url "mark_notifications_as_read" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const badge = toggle.querySelector('.badge');
+                        if (badge) badge.remove();
+                        hasUnread = false;
+                    })
+                    .catch(err => console.error('Ошибка при пометке:', err));
+                }
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Закрыть при клике вне
+        document.addEventListener('click', () => {
+            dropdown.style.display = 'none';
+        });
+
+        dropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Удаление уведомления
+        function deleteNotification(notificationId) {
+            if (!confirm("Удалить это уведомление?")) return;
+
+            fetch('{% url "delete_notification" 0 %}'.replace('0', notificationId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('notification-' + notificationId).remove();
+                    // Обновляем счётчик
+                    const badge = document.querySelector('.badge');
+                    if (badge) {
+                        let count = parseInt(badge.textContent) - 1;
+                        if (count <= 0) {
+                            badge.remove();
+                        } else {
+                            badge.textContent = count;
+                        }
+                    }
+                } else {
+                    alert('Ошибка при удалении');
+                }
+            })
+            .catch(err => {
+                console.error('Ошибка:', err);
+                alert('Не удалось удалить');
+            });
+        }
+
+        // Получение CSRF-токена
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // ✅ Добавленные функции для формы отклонения заявки
+        function showRejectForm(requestId) {
+            const form = document.getElementById(`reject-form-${requestId}`);
+            if (form) {
+                form.style.display = 'block';
+            }
+        }
+
+        function hideRejectForm(requestId) {
+            const form = document.getElementById(`reject-form-${requestId}`);
+            if (form) {
+                form.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

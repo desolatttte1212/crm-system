@@ -1,0 +1,58 @@
+<!-- templates/accounts/system_admin_panel.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Админ-панель{% endblock %}
+{% block header %}Управление ролями{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">Назначьте роль пользователю</p>
+
+    {% if users %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Пользователь</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Email</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Текущая роль</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Назначить роль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ user.email }}</td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {% if user.groups.all %}
+                                    {% for g in user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                {% else %}
+                                    <span style="color: #e74c3c;">Без роли</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <form method="post" action="{% url 'set_user_role' user.id %}" style="display: flex; gap: 0.5rem;">
+                                    {% csrf_token %}
+                                    <select name="group" style="flex: 1; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                        <option value="">Без роли</option>
+                                        {% for group in groups %}
+                                            <option value="{{ group.id }}"
+                                                    {% if user.groups.all.0.name == group.name %}selected{% endif %}>
+                                                {{ group.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Сохранить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет пользователей
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

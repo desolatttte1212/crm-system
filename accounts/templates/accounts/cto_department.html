@@ -1,0 +1,97 @@
+<!-- templates/accounts/cto_department.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}КТО — Техническая оценка{% endblock %}
+{% block header %}Конструкторско-технологический отдел{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">
+        Заявки, требующие технической проработки и оценки реализуемости
+    </p>
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кол-во</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Комментарий КТО</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.quantity }}</td>
+                            <td style="padding: 1rem;">
+                                <!-- Единая форма для всех действий -->
+                                <form method="post" action="{% url 'cto_approve_for_cost' req.id %}">
+                                    {% csrf_token %}
+                                    <textarea name="cto_comment" placeholder="Введите техническую оценку..."
+                                        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;
+                                        background: white; color: black;
+                                        font-size: 0.95rem; min-height: 80px; margin-bottom: 10px; resize: vertical;">{{ req.cto_comment|default:'' }}</textarea>
+
+                                    <div style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                            Одобрить
+                                        </button>
+                                        <button type="submit" formaction="{% url 'cto_reject' req.id %}"
+                                                class="btn btn-outline" style="flex: 1;"
+                                                onclick="return confirm('Вы уверены, что хотите отклонить заявку? Товар вернется на склад.');">
+                                            Отклонить
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                У вас пока нет заявок на техническую оценку
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок на техническую оценку
+        </p>
+    {% endif %}
+</div>
+
+<style>
+    .btn {
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+        text-align: center;
+        white-space: nowrap;
+        cursor: pointer;
+        min-width: 120px;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+
+    textarea {
+        color: black !important;
+        background: white !important;
+    }
+</style>
+{% endblock %}

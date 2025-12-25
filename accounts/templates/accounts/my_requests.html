@@ -1,0 +1,198 @@
+<!-- templates/accounts/my_requests.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Мои заявки{% endblock %}
+{% block header %}Мои заявки{% endblock %}
+{% block content %}
+<div class="card">
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Кол-во</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Доставка</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Статус</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Дата</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light); font-weight: 500;">Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.quantity }}</td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {% if req.delivery_type == 'pickup' %}Самовывоз{% else %}Доставка{% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="
+                                    padding: 0.4rem 0.8rem;
+                                    border-radius: 6px;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    {% if req.status == 'sent' %}
+                                        background: rgba(26, 115, 232, 0.2);
+                                        color: #1a73e8;
+                                    {% elif req.status == 'processing' %}
+                                        background: rgba(255, 193, 7, 0.2);
+                                        color: #f39c12;
+                                    {% elif req.status == 'completed' %}
+                                        background: rgba(40, 167, 69, 0.2);
+                                        color: #28a745;
+                                    {% elif req.status == 'cancelled' %}
+                                        background: rgba(220, 53, 69, 0.2);
+                                        color: #dc3545;
+                                    {% endif %}
+                                ">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                                {{ req.created_at|date:"d M Y, H:i" }}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {{ req.manager_comment|default:"—" }}
+                            </td>
+                        </tr>
+
+                        <!-- Блок: документы на подписание -->
+                        {% if req.status == 'documents_ready' %}
+                            <tr style="background: rgba(26, 115, 232, 0.05);">
+                                <td colspan="6" style="padding: 1.5rem;">
+                                    <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; background: rgba(26, 115, 232, 0.08);">
+                                        <h4 style="margin: 0 0 1rem; color: var(--primary-light);">Подписание документов</h4>
+                                        <p>Пожалуйста, ознакомьтесь с документами, скачайте и подпишите их, внесите аванс по реквизитам указанным в счете:</p>
+
+                                        {% if req.signed_contract_file %}
+                                            <p>
+                                                <a href="{{ req.signed_contract_file.url }}" target="_blank" class="doc-link">
+                                                    <i class="fas fa-file-contract"></i> Подписанный договор
+                                                </a>
+                                            </p>
+                                        {% endif %}
+
+                                        {% if req.invoice_file %}
+                                            <p>
+                                                <a href="{{ req.invoice_file.url }}" target="_blank" class="doc-link">
+                                                    <i class="fas fa-file-invoice"></i> Счёт
+                                                </a>
+                                            </p>
+                                        {% endif %}
+
+                                        <form method="post" action="{% url 'client_sign_documents' req.id %}" enctype="multipart/form-data" style="margin-top: 1rem;">
+                                            {% csrf_token %}
+                                            <div style="margin-bottom: 1rem;">
+                                                <label style="display: block; margin-bottom: 0.5rem;">Подписанный договор</label>
+                                                <input type="file" name="client_signed_contract" required style="color: white;">
+                                            </div>
+                                            <div style="margin-bottom: 1rem;">
+                                                <label style="display: block; margin-bottom: 0.5rem;">Подписанный счёт</label>
+                                                <input type="file" name="client_signed_invoice" required style="color: white;">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                ✅ Подписать и вернуть менеджеру
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+
+                        {% if req.status == 'shipping_docs_to_client' %}
+                            <tr style="background: rgba(26, 115, 232, 0.05);">
+                                <td colspan="6" style="padding: 1.5rem;">
+                                    <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; background: rgba(26, 115, 232, 0.08);">
+                                        <h4 style="margin: 0 0 1rem; color: var(--primary-light);">Подписание отгрузочных документов</h4>
+                                        <p>
+                                            <a href="{{ req.shipping_docs.url }}" target="_blank" class="doc-link">
+                                                <i class="fas fa-truck"></i> Отгрузочные документы
+                                            </a>
+                                        </p>
+                                        <form method="post" action="{% url 'client_sign_shipping_docs' req.id %}" enctype="multipart/form-data" style="margin-top: 1rem;">
+                                            {% csrf_token %}
+                                            <input type="file" name="client_signed_shipping_docs" required style="color: white;">
+                                            <button type="submit" class="btn btn-primary">
+                                                ✅ Подписать и вернуть менеджеру
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+
+                        <!-- Если профиль не заполнен -->
+                        {% if not request.user.profile.is_profile_complete %}
+                            <div style="background: rgba(255, 193, 7, 0.2); border: 1px solid #f39c12; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                                <p style="color: #f39c12; margin: 0;">
+                                    ⚠️ Вы не можете создать заявку, пока не <a href="{% url 'complete_profile' %}" style="color: #1a73e8;">заполните профиль</a>.
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Блок: согласование цены и сроков -->
+                        {% if req.status == 'awaiting_client' %}
+                            <tr style="background: rgba(26, 115, 232, 0.05);">
+                                <td colspan="6" style="padding: 1.5rem;">
+                                    <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; background: rgba(26, 115, 232, 0.08);">
+                                        <h4 style="margin: 0 0 1rem; color: var(--primary-light);">Согласование с вами</h4>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                                            <div>
+                                                <strong style="color: var(--text);">Стоимость:</strong>
+                                                <p style="margin: 0.5rem 0; font-size: 1.2rem; color: #1a73e8; font-weight: 500;">
+                                                    {{ req.cost_estimate }} ₽
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <strong style="color: var(--text);">Сроки поставки:</strong>
+                                                <p style="margin: 0.5rem 0; font-size: 1.1rem; color: var(--text);">
+                                                    {{ req.delivery_estimate }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p style="margin: 0 0 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+                                            Пожалуйста, подтвердите, что согласны с предложенными условиями.
+                                        </p>
+
+                                        <!-- ✅ Форма одобрения -->
+                                        <form method="post" action="{% url 'client_approve' req.id %}" style="display: inline;">
+                                            {% csrf_token %}  <!-- ✅ Добавлено -->
+                                            <button type="submit" class="btn btn-primary">
+                                                ✅ Одобрить
+                                            </button>
+                                        </form>
+
+                                        <!-- ✅ Форма отклонения -->
+                                        <form method="post" action="{% url 'client_reject' req.id %}" style="display: inline; margin-left: 1rem;">
+                                            {% csrf_token %}  <!-- ✅ Добавлено -->
+                                            <button type="button" onclick="showRejectForm({{ req.id }})" class="btn btn-outline">
+                                                ❌ Отклонить
+                                            </button>
+                                            <div id="reject-form-{{ req.id }}" style="display: none; margin-top: 1rem; padding: 1rem; border-top: 1px solid var(--border);">
+                                                <div style="margin-bottom: 0.5rem;">
+                                                    <label style="display: block; color: var(--primary-light); font-size: 0.95rem;">
+                                                        Укажите причину несогласия
+                                                    </label>
+                                                    <textarea name="reason"
+                                                              placeholder="Например: цена слишком высокая, неактуально, нужно изменить комплектацию..."
+                                                              style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text); min-height: 80px;"></textarea>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary">Отправить</button>
+                                                <button type="button" onclick="hideRejectForm({{ req.id }})" class="btn btn-outline" style="margin-left: 0.5rem;">Отмена</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            У вас пока нет заявок
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

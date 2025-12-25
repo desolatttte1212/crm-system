@@ -1,0 +1,126 @@
+<!-- templates/accounts/economist.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Экономист{% endblock %}
+{% block header %}Расчёт стоимости{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">
+        Заявки, требующие расчёта стоимости и сроков
+    </p>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'error' or message.tags == 'success' %}
+                <div class="alert alert-{{ message.tags }}" style="background: {% if message.tags == 'error' %}#ff6b6b{% else %}#4caf50{% endif %}; color: white; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кол-во</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Комментарий КТО</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Расчёт стоимости</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text); vertical-align: top;">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text); vertical-align: top;">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text); vertical-align: top;">{{ req.product_name }}</td>
+                            <td style="padding: 1rem; color: var(--text); vertical-align: top;">{{ req.quantity }}</td>
+                            <td style="padding: 1rem; color: var(--text); font-size: 0.95rem; vertical-align: top;">
+                                {{ req.cto_comment|default:"—" }}
+                            </td>
+                            <td style="padding: 1rem; vertical-align: top;">
+                                <!-- Форма для отправки клиенту -->
+                                <form method="post" action="{% url 'economist_update_cost' req.id %}">
+                                    {% csrf_token %}
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <label style="display: block; margin-bottom: 0.3rem; font-size: 0.9rem; color: var(--text);">Стоимость (₽)</label>
+                                        <input type="number" step="0.01" name="cost_estimate" required
+                                               value="{{ req.cost_estimate|default:'' }}"
+                                               style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: white; color: black; font-size: 0.95rem;">
+                                    </div>
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <label style="display: block; margin-bottom: 0.3rem; font-size: 0.9rem; color: var(--text);">Сроки поставки</label>
+                                        <input type="text" name="delivery_estimate" required
+                                               value="{{ req.delivery_estimate|default:'' }}"
+                                               placeholder="например: 5 дней"
+                                               style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: white; color: black; font-size: 0.95rem;">
+                                    </div>
+                            </td>
+                            <td style="padding: 1rem; vertical-align: top;">
+                                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 10px; padding: 10px; margin-top: 28px;">
+                                        Отправить клиенту
+                                    </button>
+                                </form>
+
+                                <!-- Отдельная форма для отмены -->
+                                <form method="post" action="{% url 'economist_cancel' req.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline" style="width: 100%; padding: 10px; margin-top: 10px;"
+                                            onclick="return confirm('Отменить заявку? Товар вернется на склад.');">
+                                        Отменить заявку
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок на расчёт стоимости
+        </p>
+    {% endif %}
+</div>
+
+<style>
+    .btn {
+        border-radius: 6px;
+        font-size: 14px;
+        text-align: center;
+        white-space: nowrap;
+        cursor: pointer;
+        border: none;
+        display: block;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary) !important;
+    }
+
+    textarea, input {
+        color: black !important;
+        background: white !important;
+    }
+
+    input::placeholder {
+        color: #666 !important;
+    }
+
+    /* Выравнивание всех ячеек по верху */
+    td {
+        vertical-align: top !important;
+    }
+</style>
+{% endblock %}

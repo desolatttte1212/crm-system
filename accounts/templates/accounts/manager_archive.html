@@ -1,0 +1,124 @@
+<!-- templates/accounts/manager_archive.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Архив заявок{% endblock %}
+{% block header %}Архив заявок{% endblock %}
+{% block content %}
+<div class="card">
+    <!-- Фильтры -->
+    <form method="get" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; margin-bottom: 2rem; align-items: end;">
+        <div>
+            <label>Поиск по товару</label>
+            <input type="text" name="search" value="{{ search }}" placeholder="Поиск..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+        <button type="submit" class="btn btn-primary" style="height: fit-content;">Применить</button>
+    </form>
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Кол-во</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Статус</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {{ req.user.profile.company_name|default:req.user.profile.full_name|default:req.user.username }}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.quantity }}</td>
+                            <td style="padding: 1rem;">
+                                <span style="
+                                    padding: 0.4rem 0.8rem;
+                                    border-radius: 6px;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    {% if req.status == 'completed' %}
+                                        background: rgba(40, 167, 69, 0.2);
+                                        color: #28a745;
+                                    {% elif req.status == 'cancelled' %}
+                                        background: rgba(220, 53, 69, 0.2);
+                                        color: #dc3545;
+                                    {% endif %}
+                                ">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                                {{ req.created_at|date:"d M Y, H:i" }}
+                            </td>
+                        </tr>
+
+                        <!-- Блок: подписанные документы -->
+                        <tr style="background: rgba(40, 167, 69, 0.05);">
+                            <td colspan="6" style="padding: 1rem;">
+                                <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; background: rgba(40, 167, 69, 0.08);">
+                                    <strong style="color: var(--primary-light); margin-bottom: 0.5rem; display: block;">Подписанные документы:</strong>
+
+                                    {% if req.client_signed_contract %}
+                                        <p>
+                                            <a href="{{ req.client_signed_contract.url }}" target="_blank" class="doc-link">
+                                                <i class="fas fa-file-signature"></i> Подписанный договор
+                                            </a>
+                                        </p>
+                                    {% endif %}
+
+                                    {% if req.client_signed_invoice %}
+                                        <p>
+                                            <a href="{{ req.client_signed_invoice.url }}" target="_blank" class="doc-link">
+                                                <i class="fas fa-file-invoice"></i> Подписанный счёт
+                                            </a>
+                                        </p>
+                                    {% endif %}
+
+                                    {% if req.client_signed_shipping_docs %}
+                                        <p>
+                                            <a href="{{ req.client_signed_shipping_docs.url }}" target="_blank" class="doc-link">
+                                                <i class="fas fa-truck"></i> Подписанный акт приёмки
+                                            </a>
+                                        </p>
+                                    {% endif %}
+
+                                    {% if not req.client_signed_contract and not req.client_signed_invoice and not req.client_signed_shipping_docs %}
+                                        <p style="color: var(--text-muted); font-size: 0.95rem;">
+                                            Документы не загружены
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 🔽 НОВОЕ: Причина отмены — ВНЕ блока с документами -->
+                        {% if req.status == 'cancelled' and req.client_rejection_reason %}
+                            <tr style="background: rgba(220, 53, 69, 0.1);">
+                                <td colspan="6" style="padding: 1rem; color: #dc3545; font-weight: 500; font-size: 0.95rem;">
+                                    <i class="fas fa-times-circle"></i>
+                                    <strong>Причина отмены:</strong> {{ req.client_rejection_reason }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                Архив пуст
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок в архиве
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

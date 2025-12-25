@@ -1,0 +1,61 @@
+<!-- templates/accounts/profile.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Личный кабинет{% endblock %}
+{% block header %}Личный кабинет{% endblock %}
+{% block content %}
+<div class="card">
+    <h3>Основная информация</h3>
+    <div class="info-row">
+        <div class="info-label">Логин</div>
+        <div class="info-value">{{ request.user.username }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Email</div>
+        <div class="info-value">{{ request.user.email }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Дата регистрации</div>
+        <div class="info-value">{{ request.user.date_joined|date:"d M Y" }}</div>
+    </div>
+
+    <!-- Данные из профиля -->
+    {% if profile %}
+        <div class="info-row">
+            <div class="info-label">Телефон</div>
+            <div class="info-value">{{ profile.phone|default:"—" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Адрес</div>
+            <div class="info-value">{{ profile.address|default:"—" }}</div>
+        </div>
+
+        <!-- Юрлицо -->
+        {% if profile.company_name %}
+            <div class="info-row">
+                <div class="info-label">Название компании</div>
+                <div class="info-value">{{ profile.company_name }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">ИНН</div>
+                <div class="info-value">{{ profile.inn|default:"—" }}</div>
+            </div>
+        {% endif %}
+
+        <!-- Физлицо -->
+        {% if profile.full_name %}
+            <div class="info-row">
+                <div class="info-label">ФИО</div>
+                <div class="info-value">{{ profile.full_name }}</div>
+            </div>
+        {% endif %}
+    {% else %}
+        <p>Профиль не создан.</p>
+    {% endif %}
+
+    <div style="text-align: right; margin-top: 2rem;">
+        <a href="{% url 'complete_profile' %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Редактировать данные
+        </a>
+    </div>
+</div>
+{% endblock %}

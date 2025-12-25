@@ -1,0 +1,114 @@
+<!-- templates/accounts/lead_manager_page.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Главный менеджер{% endblock %}
+{% block header %}Все заявки{% endblock %}
+{% block content %}
+<div class="card">
+    <!-- Фильтры и поиск -->
+    <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; margin-bottom: 2rem; align-items: end;">
+        <div>
+            <label>Поиск (клиент, товар)</label>
+            <input type="text" name="search" value="{{ search }}" placeholder="Поиск..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+        <div>
+            <label>Статус</label>
+            <select name="status" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+                <option value="">Все статусы</option>
+                {% for value, label in request.model.STATUS_CHOICES %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Менеджер</label>
+            <select name="manager" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+                <option value="">Все менеджеры</option>
+                {% for manager in managers %}
+                    <option value="{{ manager.id }}" {% if manager_filter|stringformat:"s" == manager.id|stringformat:"s" %}selected{% endif %}>
+                        {{ manager.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Сортировка</label>
+            <select name="sort" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+                <option value="">По умолчанию</option>
+                <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Новые сначала</option>
+                <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Старые сначала</option>
+                <option value="status" {% if sort == 'status' %}selected{% endif %}>По статусу</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="height: fit-content;">Применить</button>
+    </form>
+
+    <!-- Таблица -->
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Статус</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Менеджер</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Дата</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem;">
+                                <span style="
+                                    padding: 0.4rem 0.8rem;
+                                    border-radius: 6px;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    background: rgba(26, 115, 232, 0.2);
+                                    color: #1a73e8;
+                                ">{{ req.get_status_display }}</span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {% if req.assigned_manager %}
+                                    {{ req.assigned_manager.username }}
+                                {% else %}
+                                    <span style="color: #e74c3c;">Не назначен</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                                {{ req.created_at|date:"d M, H:i" }}
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if req.assigned_manager %}
+                                    <form method="post" action="{% url 'unassign_request' req.id %}" style="display: inline;" onsubmit="return confirm('Открепить заявку?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">Открепить</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="{% url 'assign_request_to_manager' req.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <select name="manager_id" style="padding: 0.4rem; border-radius: 6px;">
+                                            <option value="">Выбрать</option>
+                                            {% for m in managers %}
+                                                <option value="{{ m.id }}">{{ m.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">Назначить</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Нет заявок по фильтрам</p>
+    {% endif %}
+</div>
+{% endblock %}

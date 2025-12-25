@@ -1,0 +1,197 @@
+<!-- templates/accounts/accountant.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Бухгалтерия{% endblock %}
+{% block header %}Бухгалтерия{% endblock %}
+{% block content %}
+<div class="card">
+    <!-- Вкладки -->
+    <div style="display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <div class="tab" style="padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 500; color: var(--text-muted); border-bottom: 3px solid transparent;" onclick="showTab('invoices')">
+            🧾 Оформление счётов
+        </div>
+        <div class="tab" style="padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 500; color: var(--text-muted); border-bottom: 3px solid transparent;" onclick="showTab('shipping')">
+            📦 Отгрузочные документы
+        </div>
+        <div class="tab" style="padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 500; color: var(--text-muted); border-bottom: 3px solid transparent;" onclick="showTab('payment')">
+            💵 Подтверждение оплаты
+        </div>
+    </div>
+
+    <!-- Секция: Оформление счётов -->
+    <div id="invoices-section" class="accountant-section">
+        <p style="color: var(--text-muted); margin: 1rem 0;">Заявки, требующие оформления счёта</p>
+
+        {% if invoice_requests %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Стоимость</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in invoice_requests %}
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.cost_estimate }} ₽</td>
+                                <td style="padding: 1rem;">
+                                    <form method="post" action="{% url 'accountant_create_invoice' req.id %}" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="file" name="invoice_file" required style="margin-bottom: 0.5rem;">
+                                        <button type="submit" class="btn btn-primary">Прикрепить счёт</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                    Нет заявок на оформлении счёта
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Нет заявок на оформлении счёта</p>
+        {% endif %}
+    </div>
+
+    <!-- Секция: Отгрузочные документы -->
+    <div id="shipping-section" class="accountant-section" style="display: none;">
+        <p style="color: var(--text-muted); margin: 1rem 0;">Заявки, готовые к оформлению отгрузочных документов</p>
+
+        {% if shipping_requests %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in shipping_requests %}
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                                <td style="padding: 1rem;">
+                                    <form method="post" action="{% url 'accountant_add_shipping_docs' req.id %}" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="file" name="shipping_docs" required style="margin-bottom: 0.5rem;">
+                                        <button type="submit" class="btn btn-primary">Прикрепить отгрузочные документы</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                    Нет заявок на оформлении отгрузки
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Нет заявок на оформлении отгрузки</p>
+        {% endif %}
+    </div>
+
+    <!-- Секция: Подтверждение оплаты -->
+    <div id="payment-section" class="accountant-section" style="display: none;">
+        <p style="color: var(--text-muted); margin: 1rem 0;">Заявки, ожидающие подтверждения оплаты</p>
+
+        {% if payment_requests %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Сумма</th>
+                            <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in payment_requests %}
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                                <td style="padding: 1rem; color: var(--text);">{{ req.cost_estimate }} ₽</td>
+                                <td style="padding: 1rem;">
+                                    <form method="post" action="{% url 'confirm_payment' req.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary">
+                                            ✅ Подтвердить оплату
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                    Нет заявок на подтверждении оплаты
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Нет заявок</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript для вкладок -->
+<script>
+    function showTab(tabName) {
+        // Скрываем все секции
+        document.getElementById('invoices-section').style.display = 'none';
+        document.getElementById('shipping-section').style.display = 'none';
+        document.getElementById('payment-section').style.display = 'none';
+
+        // Убираем подсветку у всех вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.style.color = 'var(--text-muted)';
+            tab.style.borderBottom = '3px solid transparent';
+        });
+
+        // Показываем выбранную секцию
+        if (tabName === 'invoices') {
+            document.getElementById('invoices-section').style.display = 'block';
+            document.querySelector('.tab:nth-child(1)').style.color = 'var(--primary-light)';
+            document.querySelector('.tab:nth-child(1)').style.borderBottom = '3px solid var(--primary-light)';
+        } else if (tabName === 'shipping') {
+            document.getElementById('shipping-section').style.display = 'block';
+            document.querySelector('.tab:nth-child(2)').style.color = 'var(--primary-light)';
+            document.querySelector('.tab:nth-child(2)').style.borderBottom = '3px solid var(--primary-light)';
+        } else if (tabName === 'payment') {
+            document.getElementById('payment-section').style.display = 'block';
+            document.querySelector('.tab:nth-child(3)').style.color = 'var(--primary-light)';
+            document.querySelector('.tab:nth-child(3)').style.borderBottom = '3px solid var(--primary-light)';
+        }
+    }
+
+    // По умолчанию показываем вкладку "счёта"
+    showTab('invoices');
+</script>
+
+<style>
+    .accountant-section {
+        transition: opacity 0.3s ease;
+    }
+</style>
+{% endblock %}

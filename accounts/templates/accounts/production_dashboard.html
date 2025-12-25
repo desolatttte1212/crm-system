@@ -1,0 +1,76 @@
+<!-- templates/accounts/production_dashboard.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Производство{% endblock %}
+{% block header %}Производство{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">Заявки, находящиеся в производстве</p>
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Статус</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem;">
+                                <span style="
+                                    padding: 0.4rem 0.8rem;
+                                    border-radius: 6px;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    {% if req.status == 'in_production' %}
+                                        background: rgba(26, 115, 232, 0.2);
+                                        color: #1a73e8;
+                                    {% elif req.status == 'ready_for_delivery' %}
+                                        background: rgba(40, 167, 69, 0.2);
+                                        color: #28a745;
+                                    {% endif %}
+                                ">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <!-- ✅ Исправлено: правильный URL -->
+                                <form method="post" action="{% url 'production_update_request_status' req.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <select name="status" onchange="this.form.submit()"
+                                            style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text);">
+                                        <option value="in_production" {% if req.status == 'in_production' %}selected{% endif %}>
+                                            В производстве
+                                        </option>
+                                        <option value="ready_for_delivery" {% if req.status == 'ready_for_delivery' %}selected{% endif %}>
+                                            Готова к отгрузке
+                                        </option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                Нет заявок на производстве
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

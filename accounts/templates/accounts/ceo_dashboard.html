@@ -1,0 +1,52 @@
+<!-- templates/accounts/ceo_dashboard.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Генеральный директор{% endblock %}
+{% block header %}Подписание договоров{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">Заявки, требующие подписания договора</p>
+
+    {% if requests %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">ID</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Стоимость</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">{{ req.id }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.user.username }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.product_name }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ req.cost_estimate }} ₽</td>
+                            <td style="padding: 1rem;">
+                                <form method="post" action="{% url 'ceo_sign_contract' req.id %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="file" name="signed_contract_file" required>
+                                    <button type="submit">Прикрепить договор</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                Нет заявок на подписании
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Нет заявок
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

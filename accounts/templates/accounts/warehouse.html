@@ -1,0 +1,46 @@
+<!-- templates/accounts/warehouse.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Склад / Каталог{% endblock %}
+{% block header %}Каталог товаров{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Ниже представлены товары, доступные для заказа.
+    </p>
+
+    {% if products %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Товар</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Описание</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Цена</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Наличие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text); font-weight: 500;">{{ product.name }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ product.description|default:"—" }}</td>
+                            <td style="padding: 1rem; color: #1a73e8; font-weight: 500;">{{ product.price }} ₽</td>
+                            <td style="padding: 1rem; color: var(--text);">
+                                {% if product.quantity > 0 %}
+                                    <span style="color: #28a745;">✅ В наличии ({{ product.quantity }} шт.)</span>
+                                {% else %}
+                                    <span style="color: #dc3545;">❌ Нет в наличии</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Каталог пуст или товары временно недоступны.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

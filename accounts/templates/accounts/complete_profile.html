@@ -1,0 +1,72 @@
+<!-- templates/accounts/complete_profile.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Заполните профиль{% endblock %}
+{% block header %}Заполните профиль{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Чтобы создавать заявки, заполните, пожалуйста, ваш профиль.
+    </p>
+
+    <form method="post" style="display: grid; gap: 1.5rem;">
+        {% csrf_token %}
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--primary-light);">Тип клиента</label>
+            <label style="display: block; margin-bottom: 0.5rem;">
+                <input type="radio" name="client_type" value="company" checked> Юридическое лицо
+            </label>
+            <label style="display: block;">
+                <input type="radio" name="client_type" value="individual"> Физическое лицо
+            </label>
+        </div>
+
+        <!-- Юрлицо -->
+        <div id="company-fields">
+            <div>
+                <label>Название компании</label>
+                <input type="text" name="company_name" value="{{ profile.company_name }}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+            </div>
+            <div>
+                <label>ИНН</label>
+                <input type="text" name="inn" value="{{ profile.inn }}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+            </div>
+        </div>
+
+        <!-- Физлицо -->
+        <div id="individual-fields" style="display: none;">
+            <div>
+                <label>ФИО</label>
+                <input type="text" name="full_name" value="{{ profile.full_name }}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+            </div>
+        </div>
+
+        <!-- Общие поля -->
+        <div>
+            <label>Телефон *</label>
+            <input type="text" name="phone" value="{{ profile.phone }}" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
+        </div>
+        <div>
+            <label>Адрес</label>
+            <textarea name="address" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">{{ profile.address }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить и продолжить</button>
+    </form>
+</div>
+
+<script>
+    // Переключение между формами
+    document.querySelectorAll('input[name="client_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'company') {
+                document.getElementById('company-fields').style.display = 'block';
+                document.getElementById('individual-fields').style.display = 'none';
+            } else {
+                document.getElementById('company-fields').style.display = 'none';
+                document.getElementById('individual-fields').style.display = 'block';
+            }
+        });
+    });
+</script>
+{% endblock %}

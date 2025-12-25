@@ -1,0 +1,46 @@
+<!-- templates/accounts/manager_clients.html -->
+{% extends "accounts/base_dashboard.html" %}
+{% block title %}Мои клиенты{% endblock %}
+{% block header %}Мои клиенты{% endblock %}
+{% block content %}
+<div class="card">
+    <p style="color: var(--text-muted); margin: 1rem 0;">Клиенты, с которыми вы работаете</p>
+
+    {% if clients_with_stats %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Клиент</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Email</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Активные заявки</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--primary-light);">Всего заявок</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in clients_with_stats %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem; color: var(--text);">
+                                {{ item.client.profile.company_name|default:item.client.profile.full_name|default:item.client.username }}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text);">{{ item.client.email }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ item.active_requests }}</td>
+                            <td style="padding: 1rem; color: var(--text);">{{ item.total_requests }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                У вас пока нет клиентов
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            У вас пока нет клиентов
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

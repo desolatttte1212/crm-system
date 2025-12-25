@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать заявку</title>
+    <!-- Подключение jQuery (необходим для работы Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Подключение Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Русский язык для Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/ru.js"></script>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-light: #5a8dee;
+            --text: #e6f1ff;
+            --text-muted: #8892b0;
+            --border: #233554;
+            --background: #112240;
+            --bg-dark: #0a192f;
+            --card-bg: #112240;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a192f;
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: #112240;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(2, 12, 27, 0.7);
+            border: 1px solid #233554;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0a192f;
+            color: var(--text);
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1557b7;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary) !important;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 0.95rem;
+            border: 1px solid #ff6b81;
+        }
+
+        .product-info {
+            background: rgba(17, 34, 64, 0.8);
+            padding: 1.2rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            display: none;
+            border-left: 4px solid var(--primary);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .quantity-error {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 {
+            margin-top: 2rem;
+        }
+
+        .ml-1 {
+            margin-left: 1rem;
+        }
+
+        /* Стилизация Select2 */
+        .select2-container--default .select2-selection--single {
+            height: auto;
+            min-height: 46px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0a192f;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--text);
+            line-height: 1.5;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+            right: 8px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: var(--text-muted) transparent transparent transparent;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            border-color: transparent transparent var(--text-muted) transparent;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary);
+        }
+
+        .select2-container--default .select2-results__option {
+            font-size: 0.95rem;
+            padding: 8px 12px;
+            background: #112240;
+            color: var(--text);
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.95rem;
+            background: #0a192f;
+            color: var(--text);
+        }
+
+        .select2-dropdown {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #112240;
+            box-shadow: 0 10px 30px rgba(2, 12, 27, 0.7);
+        }
+
+        /* Стили для текста с серым цветом */
+        .text-muted {
+            color: var(--text-muted);
+            margin: 1.5rem 0;
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Улучшенные стили для кнопок */
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2.5rem;
+        }
+
+        /* Стили для placeholder в select2 */
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Создать заявку</h1>
+
+            <p class="text-muted">
+                Заполните форму для создания новой заявки
+            </p>
+
+            <!-- Сообщение об ошибке -->
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Название товара с автодополнением -->
+                <div class="form-group">
+                    <label for="product_search">Поиск товара</label>
+                    <select id="product_search" class="js-example-basic-single" style="width: 100%">
+                        <option value="">Начните вводить название товара</option>
+                        {% for product in available_products %}
+                        <option value="{{ product.id }}"
+                                data-quantity="{{ product.quantity }}"
+                                data-price="{{ product.price }}">
+                            {{ product.name }} (доступно: {{ product.quantity }}, цена: {{ product.price }} ₽)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" id="product_id" name="product_id" value="{{ form.product_id.value|default:'' }}">
+                </div>
+
+                <!-- Информация о выбранном товаре -->
+                <div id="product-info" class="product-info">
+                    <div class="info-row">
+                        <span>Доступно:</span>
+                        <span id="available-quantity" style="font-weight: 600; color: var(--text);"></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Цена:</span>
+                        <span id="product-price" style="font-weight: 600; color: var(--primary);"></span>
+                    </div>
+                </div>
+
+                <!-- Количество -->
+                <div class="form-group">
+                    <label for="quantity">Количество</label>
+                    <input type="number" id="quantity" name="quantity" min="1" placeholder="1"
+                           value="{{ form.quantity.value|default:'' }}" oninput="validateQuantity()">
+                    <div id="quantity-error" class="quantity-error">
+                        Превышено доступное количество
+                    </div>
+                </div>
+
+                <!-- Тип доставки -->
+                <div class="form-group">
+                    <label for="delivery_type">Тип доставки</label>
+                    <select id="delivery_type" name="delivery_type">
+                        <option value="">Выберите тип</option>
+                        <option value="pickup" {% if form.delivery_type.value == 'pickup' %}selected{% endif %}>Самовывоз</option>
+                        <option value="delivery" {% if form.delivery_type.value == 'delivery' %}selected{% endif %}>Доставка</option>
+                    </select>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="text-center mt-2">
+                    <button type="submit" class="btn btn-primary">Создать заявку</button>
+                    <a href="{% url 'home' %}" class="btn btn-outline ml-1">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация Select2 с поиском
+            $('#product_search').select2({
+                placeholder: "Начните вводить название товара",
+                allowClear: true,
+                language: "ru"
+            });
+
+            // Если уже есть выбранный товар (при повторной загрузке формы)
+            {% if form.product_id.value %}
+            const selectedProductId = "{{ form.product_id.value }}";
+            const selectedOption = $('#product_search option[value="' + selectedProductId + '"]');
+            if (selectedOption.length) {
+                $('#product_search').val(selectedProductId).trigger('change');
+
+                // Обновляем информацию о товаре
+                const quantity = selectedOption.data('quantity');
+                const price = selectedOption.data('price');
+
+                document.getElementById('available-quantity').textContent = quantity + ' шт.';
+                document.getElementById('product-price').textContent = price + ' ₽';
+                document.getElementById('product-info').style.display = 'block';
+
+                // Устанавливаем максимальное количество
+                document.getElementById('quantity').max = quantity;
+            }
+            {% endif %}
+
+            // Обработчик выбора товара
+            $('#product_search').on('select2:select', function (e) {
+                const selectedOption = $(this).find('option:selected');
+                document.getElementById('product_id').value = selectedOption.val();
+
+                // Обновляем информацию о товаре
+                const quantity = selectedOption.data('quantity');
+                const price = selectedOption.data('price');
+                const productInfo = document.getElementById('product-info');
+                const availableQuantity = document.getElementById('available-quantity');
+                const productPrice = document.getElementById('product-price');
+                const quantityInput = document.getElementById('quantity');
+
+                availableQuantity.textContent = quantity + ' шт.';
+                productPrice.textContent = price + ' ₽';
+                productInfo.style.display = 'block';
+
+                // Устанавливаем максимальное количество
+                quantityInput.max = quantity;
+                if (!quantityInput.value || parseInt(quantityInput.value) > quantity) {
+                    quantityInput.value = Math.min(1, quantity);
+                }
+
+                // Валидируем текущее значение
+                validateQuantity();
+            });
+
+            // Обработчик очистки выбора
+            $('#product_search').on('select2:clear', function () {
+                document.getElementById('product_id').value = '';
+                document.getElementById('product-info').style.display = 'none';
+                document.getElementById('quantity').value = '';
+                document.getElementById('quantity').max = '';
+            });
+
+            // Обработчики событий для валидации
+            document.getElementById('quantity').addEventListener('input', validateQuantity);
+        });
+
+        // Функция валидации количества
+        function validateQuantity() {
+            const quantityInput = document.getElementById('quantity');
+            const productSelect = document.getElementById('product_search');
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const errorDiv = document.getElementById('quantity-error');
+
+            if (selectedOption && selectedOption.value && quantityInput.value) {
+                const quantity = parseInt(selectedOption.getAttribute('data-quantity'));
+                const enteredQuantity = parseInt(quantityInput.value);
+
+                if (enteredQuantity > quantity) {
+                    errorDiv.style.display = 'block';
+                    quantityInput.style.borderColor = '#ff6b6b';
+                } else {
+                    errorDiv.style.display = 'none';
+                    quantityInput.style.borderColor = '';
+                }
+            } else {
+                errorDiv.style.display = 'none';
+                quantityInput.style.borderColor = '';
+            }
+        }
+    </script>
+</body>
+</html>
